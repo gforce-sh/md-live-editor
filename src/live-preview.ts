@@ -58,16 +58,18 @@ function buildInlineDecorations(view: EditorView): DecorationSet {
           return;
         }
 
-        const isMarker =
-          name === "HeaderMark" || name === "EmphasisMark" || name === "CodeMark";
-        if (isMarker && node.to > node.from && !lineIsActive(view, node.from)) {
+        if (name === "HeaderMark" && node.to > node.from && !lineIsActive(view, node.from)) {
           let to = node.to;
-          if (name === "HeaderMark") {
-            const doc = view.state.doc;
-            const lineTo = doc.lineAt(node.from).to;
-            while (to < lineTo && doc.sliceString(to, to + 1) === " ") to++;
-          }
-          decos.push(Decoration.replace({}).range(node.from, to));
+          const doc = view.state.doc;
+          const lineTo = doc.lineAt(node.from).to;
+          while (to < lineTo && doc.sliceString(to, to + 1) === " ") to++;
+          // Use mark (not replace) so the characters stay in the DOM at zero size,
+          // keeping the line height identical whether or not the cursor is on the heading.
+          decos.push(Decoration.mark({ class: "cm-md-header-mark-hidden" }).range(node.from, to));
+        }
+        const isInlineMarker = name === "EmphasisMark" || name === "CodeMark";
+        if (isInlineMarker && node.to > node.from && !lineIsActive(view, node.from)) {
+          decos.push(Decoration.replace({}).range(node.from, node.to));
         }
       },
     });
