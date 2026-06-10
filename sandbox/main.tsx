@@ -1,6 +1,6 @@
 import { render } from "solid-js/web";
 import { createSignal } from "solid-js";
-import { MarkdownEditor } from "../src/index";
+import { MarkdownEditor, type SaveStatus } from "../src/index";
 import "../src/styles.css";
 import "./sandbox.css";
 
@@ -15,23 +15,30 @@ all other lines render it.
 
 ## Tables
 
-| Prop          | Type                            | Default |
-|---------------|---------------------------------|---------|
-| doc           | string                          | —       |
-| onSave        | (body: string) => Promise<void> | —       |
-| debounceMs    | number                          | 2000    |
-| retryMs       | number                          | 5000    |
-| onStatusChange| (status: SaveStatus) => void    | —       |
+| Prop           | Type                                | Default |
+|----------------|-------------------------------------|---------|
+| initialContent | string                              | —       |
+| onSave         | (content: string) => Promise<void>  | —       |
+| debounceMs     | number                              | 2000    |
+| retryMs        | number                              | 5000    |
+| onSaveStatus   | (status: SaveStatus) => void        | —       |
 
 ## Autosave
 
-Edits are debounced (default 2 s) then passed to \`onSave\`. The status
-indicator above the editor tracks \`idle → saving… → saved\`, or switches
-to \`couldn't save — retrying\` on failure.
+Edits are debounced (default 2 s) then passed to \`onSave\`. The editor itself
+renders no status — the host app (this sandbox) reads \`onSaveStatus\` and shows
+\`idle → saving… → saved\` in the toolbar, or \`couldn't save — retrying\` on failure.
 
 Toggle **Simulate save failures** in the toolbar above to test the retry
 flow.
 `;
+
+const STATUS_TEXT: Record<SaveStatus, string> = {
+  idle: "",
+  saving: "Saving…",
+  saved: "Saved",
+  error: "Couldn't save — retrying",
+};
 
 function timestamp() {
   return new Date().toLocaleTimeString();
@@ -40,8 +47,9 @@ function timestamp() {
 function Sandbox() {
   const [failSaves, setFailSaves] = createSignal(false);
   const [log, setLog] = createSignal<string[]>([]);
+  const [status, setStatus] = createSignal<SaveStatus>("idle");
 
-  const onSave = (body: string) =>
+  const onSave = (content: string) =>
     new Promise<void>((resolve, reject) =>
       setTimeout(() => {
         if (failSaves()) {
@@ -51,7 +59,7 @@ function Sandbox() {
           reject(new Error("simulated failure"));
         } else {
           setLog((prev) =>
-            [`[${timestamp()}] saved ${body.length} chars`, ...prev].slice(0, 6),
+            [`[${timestamp()}] saved ${content.length} chars`, ...prev].slice(0, 6),
           );
           resolve();
         }
@@ -70,9 +78,16 @@ function Sandbox() {
           />
           Simulate save failures
         </label>
+        <span class="sandbox-status" role="status" aria-live="polite">
+          {STATUS_TEXT[status()]}
+        </span>
       </header>
       <div class="sandbox-editor">
-        <MarkdownEditor doc={INITIAL_DOC} onSave={onSave} />
+        <MarkdownEditor
+          initialContent={INITIAL_DOC}
+          onSave={onSave}
+          onSaveStatus={setStatus}
+        />
       </div>
       <footer class="sandbox-log">
         {log().length === 0

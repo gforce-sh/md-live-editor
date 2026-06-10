@@ -28,6 +28,14 @@ body {
   cursor: pointer;
 }
 
+.sandbox-status {
+  margin-left: auto;
+  font-size: 0.85em;
+  color: #666;
+  min-width: 13ch;
+  text-align: right;
+}
+
 .sandbox-editor {
   flex: 1;
   min-height: 0;

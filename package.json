@@ -2,7 +2,9 @@
   "name": "md-live-editor",
   "version": "0.1.0",
   "type": "module",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -32,6 +34,7 @@
     "solid-js": "^1.9.3"
   },
   "devDependencies": {
+    "@types/node": "^25.9.2",
     "jsdom": "^29.1.1",
     "solid-js": "^1.9.3",
     "typescript": "^5.7.2",
