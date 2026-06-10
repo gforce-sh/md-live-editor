@@ -5,13 +5,21 @@
   "files": [
     "dist"
   ],
-  "main": "./dist/index.js",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./dist/core.js",
+  "module": "./dist/core.js",
+  "types": "./dist/core.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "types": "./dist/core.d.ts",
+      "import": "./dist/core.js"
+    },
+    "./core": {
+      "types": "./dist/core.d.ts",
+      "import": "./dist/core.js"
+    },
+    "./solid": {
+      "types": "./dist/solid.d.ts",
+      "import": "./dist/solid.js"
     },
     "./styles.css": "./dist/styles.css"
   },
@@ -19,6 +27,7 @@
     "dev": "vite",
     "build": "vite build && cp src/styles.css dist/styles.css",
     "build:watch": "vite build --watch",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run"
   },
   "dependencies": {
@@ -32,6 +41,11 @@
   },
   "peerDependencies": {
     "solid-js": "^1.9.3"
+  },
+  "peerDependenciesMeta": {
+    "solid-js": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@types/node": "^25.9.2",

@@ -4,18 +4,14 @@ import dts from "vite-plugin-dts";
 import { resolve } from "path";
 
 export default defineConfig({
-  plugins: [
-    solidPlugin(),
-    dts({
-      include: ["src"],
-      insertTypesEntry: true,
-    }),
-  ],
+  plugins: [solidPlugin(), dts({ include: ["src"] })],
   build: {
     lib: {
-      entry: resolve(__dirname, "src/index.ts"),
+      entry: {
+        core: resolve(__dirname, "src/core.ts"),
+        solid: resolve(__dirname, "src/solid.tsx"),
+      },
       formats: ["es"],
-      fileName: "index",
     },
     rollupOptions: {
       external: ["solid-js", "solid-js/web"],

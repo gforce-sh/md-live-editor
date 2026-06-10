@@ -6,7 +6,7 @@ import {
   type SaveStatus,
 } from "./core";
 
-export type { MarkdownEditorHandle };
+export type { MarkdownEditorHandle, SaveStatus };
 
 export interface MarkdownEditorProps {
   /** Initial content. Read once on mount; replace it afterwards via the handle's setContent. */

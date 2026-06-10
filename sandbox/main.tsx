@@ -4,7 +4,7 @@ import {
   MarkdownEditor,
   type MarkdownEditorHandle,
   type SaveStatus,
-} from "../src/index";
+} from "../src/solid";
 import "../src/styles.css";
 import "./sandbox.css";
 

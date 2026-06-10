@@ -5,8 +5,8 @@ import { syntaxHighlighting, HighlightStyle } from "@codemirror/language";
 import { tags } from "@lezer/highlight";
 import { markdown } from "@codemirror/lang-markdown";
 import { GFM } from "@lezer/markdown";
-import { livePreview, tablePreview } from "../live-preview";
-import { createAutosave, type SaveStatus } from "../autosave";
+import { livePreview, tablePreview } from "./live-preview";
+import { createAutosave, type SaveStatus } from "./autosave";
 
 const markdownHighlight = HighlightStyle.define([
   { tag: tags.heading, fontWeight: "bold", textDecoration: "none" },
