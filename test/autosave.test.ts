@@ -126,4 +126,29 @@ describe("createAutosave", () => {
 
     expect(save).not.toHaveBeenCalled();
   });
+
+  it("reset cancels a pending debounced save and rebaselines", async () => {
+    const save = vi.fn().mockResolvedValue(undefined);
+    const a = createAutosave(save, opts);
+
+    a.schedule("a"); // pending edit, debounce ticking
+    a.reset("b"); // programmatic load of a different document
+    await vi.advanceTimersByTimeAsync(opts.debounceMs);
+
+    expect(save).not.toHaveBeenCalled(); // discarded edit is not saved
+    await expect(a.flushSave()).resolves.toBeUndefined();
+    expect(save).not.toHaveBeenCalled(); // the reset content is the baseline
+  });
+
+  it("saves edits made against the content set by reset", async () => {
+    const save = vi.fn().mockResolvedValue(undefined);
+    const a = createAutosave(save, opts);
+
+    a.reset("b");
+    a.schedule("bc");
+    await vi.advanceTimersByTimeAsync(opts.debounceMs);
+
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(save).toHaveBeenCalledWith("bc");
+  });
 });

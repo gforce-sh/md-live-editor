@@ -28,6 +28,17 @@ body {
   cursor: pointer;
 }
 
+.sandbox-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.sandbox-actions button {
+  font-size: 0.82em;
+  padding: 3px 8px;
+  cursor: pointer;
+}
+
 .sandbox-status {
   margin-left: auto;
   font-size: 0.85em;

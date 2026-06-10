@@ -9,6 +9,12 @@ export interface Autosave {
    * a save fails — the retry timer keeps running in the background regardless.
    */
   flushSave(): Promise<void>;
+  /**
+   * Rebaseline to `content` without saving it: cancels any pending debounce or
+   * retry and treats `content` as already-persisted. Used when the editor loads
+   * a different document (setContent) so a discarded edit is never saved.
+   */
+  reset(content: string): void;
   status(): SaveStatus;
   subscribe(cb: (status: SaveStatus) => void): () => void;
   dispose(): void;
@@ -92,6 +98,12 @@ export function createAutosave(
         waiters.push({ resolve, reject });
         run();
       });
+    },
+    reset(content: string) {
+      clearTimeout(debounceTimer);
+      clearTimeout(retryTimer);
+      pending = content;
+      lastSaved = content;
     },
     status: () => status,
     subscribe(cb) {
