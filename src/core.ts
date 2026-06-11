@@ -53,6 +53,9 @@ export interface MarkdownEditorInstance extends MarkdownEditorHandle {
 
 export type { SaveStatus };
 
+/** Colour scheme for the editor. "system" follows the OS via prefers-color-scheme. */
+export type Theme = "light" | "dark" | "system";
+
 /**
  * Framework-free markdown editor with inline Live Preview and debounced
  * autosave. Mounts a CodeMirror 6 view into `host` and returns an imperative

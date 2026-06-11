@@ -4,9 +4,10 @@ import {
   type MarkdownEditorHandle,
   type MarkdownEditorInstance,
   type SaveStatus,
+  type Theme,
 } from "./core";
 
-export type { MarkdownEditorHandle, SaveStatus };
+export type { MarkdownEditorHandle, SaveStatus, Theme };
 
 export interface MarkdownEditorProps {
   /** Initial content. Read once on mount; replace it afterwards via the handle's setContent. */
@@ -19,6 +20,8 @@ export interface MarkdownEditorProps {
   retryMs?: number;
   /** Called whenever the save status changes. The host renders the status itself. */
   onSaveStatus?: (status: SaveStatus) => void;
+  /** Colour scheme. "light" (default), "dark", or "system" (follows the OS). */
+  theme?: Theme;
   /** Receives the imperative handle once the editor has mounted. */
   ref?: (handle: MarkdownEditorHandle) => void;
 }
@@ -43,7 +46,7 @@ export function MarkdownEditor(props: MarkdownEditorProps) {
   onCleanup(() => editor?.destroy());
 
   return (
-    <article class="md-live-editor">
+    <article class="md-live-editor" data-theme={props.theme ?? "light"}>
       <div class="md-live-editor-body" ref={host} />
     </article>
   );

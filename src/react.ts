@@ -10,9 +10,10 @@ import {
   type MarkdownEditorHandle,
   type MarkdownEditorInstance,
   type SaveStatus,
+  type Theme,
 } from "./core";
 
-export type { MarkdownEditorHandle, SaveStatus };
+export type { MarkdownEditorHandle, SaveStatus, Theme };
 
 export interface MarkdownEditorProps {
   /** Initial content. Read once on mount; replace it afterwards via the ref's setContent. */
@@ -25,6 +26,8 @@ export interface MarkdownEditorProps {
   retryMs?: number;
   /** Called whenever the save status changes. The host renders the status itself. */
   onSaveStatus?: (status: SaveStatus) => void;
+  /** Colour scheme. "light" (default), "dark", or "system" (follows the OS). */
+  theme?: Theme;
 }
 
 // JSX is deliberately avoided (plain createElement) so the package never has to
@@ -73,7 +76,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorPro
 
     return createElement(
       "article",
-      { className: "md-live-editor" },
+      { className: "md-live-editor", "data-theme": props.theme ?? "light" },
       createElement("div", { className: "md-live-editor-body", ref: hostRef }),
     );
   },

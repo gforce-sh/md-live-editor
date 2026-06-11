@@ -4,6 +4,7 @@ import {
   MarkdownEditor,
   type MarkdownEditorHandle,
   type SaveStatus,
+  type Theme,
 } from "../src/solid";
 import "../src/styles.css";
 import "./sandbox.css";
@@ -27,6 +28,7 @@ all other lines render it.
 | retryMs        | number                              | 5000    |
 | onSaveStatus   | (status: SaveStatus) => void        | —       |
 | ref            | (handle) => void                    | —       |
+| theme          | light / dark / system               | "light" |
 
 ## Autosave
 
@@ -69,6 +71,7 @@ function Sandbox() {
   const [failSaves, setFailSaves] = createSignal(false);
   const [log, setLog] = createSignal<string[]>([]);
   const [status, setStatus] = createSignal<SaveStatus>("idle");
+  const [theme, setTheme] = createSignal<Theme>("light");
   let editor: MarkdownEditorHandle | undefined;
 
   const pushLog = (msg: string) =>
@@ -113,6 +116,17 @@ function Sandbox() {
           />
           Simulate save failures
         </label>
+        <label class="sandbox-toggle">
+          Theme
+          <select
+            value={theme()}
+            onChange={(e) => setTheme(e.currentTarget.value as Theme)}
+          >
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+            <option value="system">System</option>
+          </select>
+        </label>
         <div class="sandbox-actions">
           <button onClick={loadSample}>Load sample</button>
           <button onClick={logContent}>Log content</button>
@@ -128,6 +142,7 @@ function Sandbox() {
           onSave={onSave}
           onSaveStatus={setStatus}
           ref={(h) => (editor = h)}
+          theme={theme()}
         />
       </div>
       <footer class="sandbox-log">
