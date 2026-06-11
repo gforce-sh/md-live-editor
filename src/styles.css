@@ -32,6 +32,7 @@
   --mle-border: #d0cfc8;
   --mle-th-bg: #f0efe9;
   --mle-selection: #b9d6ff;
+  --mle-mark: #9a9a9a;
 }
 
 /* Dark — explicit (data-theme="dark") */
@@ -43,6 +44,7 @@
   --mle-border: #3a3a3a;
   --mle-th-bg: #2b2b2b;
   --mle-selection: #2f5278;
+  --mle-mark: #7c7c7c;
 }
 
 /* Dark — following the OS when data-theme="system" */
@@ -55,6 +57,7 @@
     --mle-border: #3a3a3a;
     --mle-th-bg: #2b2b2b;
     --mle-selection: #2f5278;
+    --mle-mark: #7c7c7c;
   }
 }
 

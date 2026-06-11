@@ -14,6 +14,9 @@ const markdownHighlight = HighlightStyle.define([
   { tag: tags.emphasis, fontStyle: "italic" },
   { tag: tags.monospace, fontFamily: "ui-monospace, monospace" },
   { tag: tags.link, color: "var(--mle-link)" },
+  // Markdown syntax marks (#, **, *, `, -, >, [], table |) are all tagged
+  // processingInstruction; mute them so the revealed source reads as markup.
+  { tag: tags.processingInstruction, color: "var(--mle-mark)" },
 ]);
 
 // Marks doc changes the editor makes itself (setContent) so the update listener
