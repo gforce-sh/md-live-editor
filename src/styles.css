@@ -15,12 +15,47 @@
   src: url("./fonts/ysabeau-infant-latin-italic.woff2") format("woff2");
 }
 
-/* Outer article shell */
+/* Outer article shell + theme variables. Switching themes is just the
+   data-theme attribute; every colour below (and the link colour set in JS by
+   the syntax highlighter) reads from these vars. */
 .md-live-editor {
   flex: 1;
   min-height: 0;
   display: flex;
   flex-direction: column;
+
+  /* Light (default) */
+  --mle-bg: #faf9f7;
+  --mle-text: #1a1a1a;
+  --mle-link: #2563eb;
+  --mle-code-bg: #f0f0f0;
+  --mle-border: #d0cfc8;
+  --mle-th-bg: #f0efe9;
+  --mle-selection: #b9d6ff;
+}
+
+/* Dark — explicit (data-theme="dark") */
+.md-live-editor[data-theme="dark"] {
+  --mle-bg: #1e1e1e;
+  --mle-text: #e4e4e4;
+  --mle-link: #6aa3ff;
+  --mle-code-bg: #2b2b2b;
+  --mle-border: #3a3a3a;
+  --mle-th-bg: #2b2b2b;
+  --mle-selection: #2f5278;
+}
+
+/* Dark — following the OS when data-theme="system" */
+@media (prefers-color-scheme: dark) {
+  .md-live-editor[data-theme="system"] {
+    --mle-bg: #1e1e1e;
+    --mle-text: #e4e4e4;
+    --mle-link: #6aa3ff;
+    --mle-code-bg: #2b2b2b;
+    --mle-border: #3a3a3a;
+    --mle-th-bg: #2b2b2b;
+    --mle-selection: #2f5278;
+  }
 }
 
 /* Inner CodeMirror host */
@@ -32,11 +67,16 @@
 /* CodeMirror base */
 .cm-editor {
   height: 100%;
-  background: #faf9f7;
+  background: var(--mle-bg);
+  color: var(--mle-text);
 }
 .cm-content {
   font-family: var(--mle-font, "Ysabeau Infant", ui-sans-serif, system-ui, sans-serif);
   font-optical-sizing: auto;
+  caret-color: var(--mle-text);
+}
+.cm-content ::selection {
+  background: var(--mle-selection);
 }
 .cm-editor.cm-focused {
   outline: none;
@@ -52,12 +92,12 @@
 }
 .md-table th,
 .md-table td {
-  border: 1px solid #d0cfc8;
+  border: 1px solid var(--mle-border);
   padding: 4px 10px;
   text-align: left;
 }
 .md-table th {
-  background: #f0efe9;
+  background: var(--mle-th-bg);
   font-weight: 700;
 }
 
@@ -71,7 +111,7 @@
 .cm-md-code {
   font-family: ui-monospace, monospace;
   font-size: 12px;
-  background: #f0f0f0;
+  background: var(--mle-code-bg);
   padding: 0 2px;
   border-radius: 3px;
 }

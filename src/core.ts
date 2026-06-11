@@ -13,7 +13,7 @@ const markdownHighlight = HighlightStyle.define([
   { tag: tags.strong, fontWeight: "bold" },
   { tag: tags.emphasis, fontStyle: "italic" },
   { tag: tags.monospace, fontFamily: "ui-monospace, monospace" },
-  { tag: tags.link, color: "#2563eb" },
+  { tag: tags.link, color: "var(--mle-link)" },
 ]);
 
 // Marks doc changes the editor makes itself (setContent) so the update listener
