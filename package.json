@@ -29,7 +29,7 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "vite build && cp src/styles.css dist/styles.css",
+    "build": "vite build && cp src/styles.css dist/styles.css && mkdir -p dist/fonts && cp src/fonts/*.woff2 dist/fonts/",
     "build:watch": "vite build --watch",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run"

@@ -1,3 +1,20 @@
+/* Bundled default font (Ysabeau Infant, latin subset, OFL). Hosts that want a
+   different face can override --mle-font (and load their own font). */
+@font-face {
+  font-family: "Ysabeau Infant";
+  font-style: normal;
+  font-weight: 1 1000;
+  font-display: swap;
+  src: url("./fonts/ysabeau-infant-latin.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Ysabeau Infant";
+  font-style: italic;
+  font-weight: 1 1000;
+  font-display: swap;
+  src: url("./fonts/ysabeau-infant-latin-italic.woff2") format("woff2");
+}
+
 /* Outer article shell */
 .md-live-editor {
   flex: 1;
@@ -18,7 +35,7 @@
   background: #faf9f7;
 }
 .cm-content {
-  font-family: 'Ysabeau Infant', sans-serif;
+  font-family: var(--mle-font, "Ysabeau Infant", ui-sans-serif, system-ui, sans-serif);
   font-optical-sizing: auto;
 }
 .cm-editor.cm-focused {
