@@ -1,15 +1,16 @@
-import { render } from "solid-js/web";
-import { createSignal } from "solid-js";
+/** @jsxImportSource react */
+import { StrictMode, useRef, useState } from "react";
+import { createRoot } from "react-dom/client";
 import {
   MarkdownEditor,
   type MarkdownEditorHandle,
   type SaveStatus,
   type Theme,
-} from "../src/solid";
+} from "../src/react";
 import "../src/styles.css";
 import "./sandbox.css";
 
-const INITIAL_DOC = `# md-live-editor sandbox
+const INITIAL_DOC = `# md-live-editor sandbox (React)
 
 Edit here to try the Live Preview. The cursor line shows raw markdown;
 all other lines render it.
@@ -27,20 +28,20 @@ all other lines render it.
 | debounceMs     | number                              | 2000    |
 | retryMs        | number                              | 5000    |
 | onSaveStatus   | (status: SaveStatus) => void        | —       |
-| ref            | (handle) => void                    | —       |
 | theme          | light / dark / system               | "light" |
+| ref            | forwarded → handle                  | —       |
 
 ## Autosave
 
 Edits are debounced (default 2 s) then passed to \`onSave\`. The editor itself
-renders no status — the host app (this sandbox) reads \`onSaveStatus\` and shows
-\`idle → saving… → saved\` in the toolbar, or \`couldn't save — retrying\` on failure.
+renders no status — this host reads \`onSaveStatus\` and shows \`idle → saving… →
+saved\` in the toolbar, or \`couldn't save — retrying\` on failure.
 
 Toggle **Simulate save failures** to test the retry flow.
 
 ## Imperative handle
 
-Pass \`ref\` to receive a handle — try the toolbar buttons:
+A \`ref\` (forwardRef) gives the handle — try the toolbar buttons:
 
 - **Load sample** replaces this document via \`setContent\`: autosave does **not**
   fire, and the undo history is reset (Cmd-Z won't bring this doc back).
@@ -68,19 +69,21 @@ const STATUS_TEXT: Record<SaveStatus, string> = {
 };
 
 function Sandbox() {
-  const [failSaves, setFailSaves] = createSignal(false);
-  const [log, setLog] = createSignal<string[]>([]);
-  const [status, setStatus] = createSignal<SaveStatus>("idle");
-  const [theme, setTheme] = createSignal<Theme>("light");
-  let editor: MarkdownEditorHandle | undefined;
+  const [failSaves, setFailSaves] = useState(false);
+  const [log, setLog] = useState<string[]>([]);
+  const [status, setStatus] = useState<SaveStatus>("idle");
+  const [theme, setTheme] = useState<Theme>("light");
+  const editorRef = useRef<MarkdownEditorHandle>(null);
 
   const pushLog = (msg: string) =>
     setLog((prev) => [`[${timestamp()}] ${msg}`, ...prev].slice(0, 6));
 
+  // A fresh closure each render, reading the current failSaves — the adapter
+  // keeps the editor pointed at this latest onSave.
   const onSave = (content: string) =>
     new Promise<void>((resolve, reject) =>
       setTimeout(() => {
-        if (failSaves()) {
+        if (failSaves) {
           pushLog("save failed (simulated)");
           reject(new Error("simulated failure"));
         } else {
@@ -91,69 +94,73 @@ function Sandbox() {
     );
 
   const loadSample = () => {
-    editor?.setContent(SAMPLE_DOC);
+    editorRef.current?.setContent(SAMPLE_DOC);
     pushLog("setContent: loaded sample (no autosave, history reset)");
   };
   const logContent = () =>
-    pushLog(`getContent: ${editor?.getContent().length ?? 0} chars`);
+    pushLog(`getContent: ${editorRef.current?.getContent().length ?? 0} chars`);
   const saveNow = () => {
     pushLog("flushSave: forcing save…");
-    editor
+    editorRef.current
       ?.flushSave()
       .then(() => pushLog("flushSave: resolved"))
       .catch(() => pushLog("flushSave: rejected"));
   };
 
   return (
-    <div class="sandbox">
-      <header class="sandbox-toolbar">
-        <strong>md-live-editor sandbox</strong>
-        <label class="sandbox-toggle">
+    <div className="sandbox">
+      <header className="sandbox-toolbar">
+        <strong>md-live-editor sandbox (React)</strong>
+        <label className="sandbox-toggle">
           <input
             type="checkbox"
-            checked={failSaves()}
-            onChange={(e) => setFailSaves(e.currentTarget.checked)}
+            checked={failSaves}
+            onChange={(e) => setFailSaves(e.target.checked)}
           />
           Simulate save failures
         </label>
-        <label class="sandbox-toggle">
+        <label className="sandbox-toggle">
           Theme
           <select
-            value={theme()}
-            onChange={(e) => setTheme(e.currentTarget.value as Theme)}
+            value={theme}
+            onChange={(e) => setTheme(e.target.value as Theme)}
           >
             <option value="light">Light</option>
             <option value="dark">Dark</option>
             <option value="system">System</option>
           </select>
         </label>
-        <div class="sandbox-actions">
+        <div className="sandbox-actions">
           <button onClick={loadSample}>Load sample</button>
           <button onClick={logContent}>Log content</button>
           <button onClick={saveNow}>Save now</button>
         </div>
-        <span class="sandbox-status" role="status" aria-live="polite">
-          {STATUS_TEXT[status()]}
+        <span className="sandbox-status" role="status" aria-live="polite">
+          {STATUS_TEXT[status]}
         </span>
       </header>
-      <div class="sandbox-editor">
+      <div className="sandbox-editor">
         <MarkdownEditor
+          ref={editorRef}
           initialContent={INITIAL_DOC}
           onSave={onSave}
           onSaveStatus={setStatus}
-          ref={(h) => (editor = h)}
-          theme={theme()}
+          theme={theme}
         />
       </div>
-      <footer class="sandbox-log">
-        {log().length === 0 ? (
-          <span class="sandbox-log-empty">Save events will appear here…</span>
+      <footer className="sandbox-log">
+        {log.length === 0 ? (
+          <span className="sandbox-log-empty">Save events will appear here…</span>
         ) : (
-          log().map((entry) => <div>{entry}</div>)
+          log.map((entry, i) => <div key={i}>{entry}</div>)
         )}
       </footer>
     </div>
   );
 }
 
-render(() => <Sandbox />, document.getElementById("root")!);
+createRoot(document.getElementById("root")!).render(
+  <StrictMode>
+    <Sandbox />
+  </StrictMode>,
+);

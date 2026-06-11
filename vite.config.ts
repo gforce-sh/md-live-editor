@@ -1,10 +1,18 @@
 import { defineConfig } from "vite";
 import solidPlugin from "vite-plugin-solid";
+import react from "@vitejs/plugin-react";
 import dts from "vite-plugin-dts";
 import { resolve } from "path";
 
-export default defineConfig({
-  plugins: [solidPlugin(), dts({ include: ["src"] })],
+// The lib build compiles src/solid.tsx (Solid JSX) → needs vite-plugin-solid.
+// The dev server serves the React sandbox (sandbox/main.tsx) → needs the React
+// plugin. The two JSX dialects can't share one plugin set, so switch on command.
+// (src/react.ts is JSX-free createElement, so the lib build needs no React plugin.)
+export default defineConfig(({ command }) => ({
+  plugins:
+    command === "build"
+      ? [solidPlugin(), dts({ include: ["src"] })]
+      : [react()],
   build: {
     lib: {
       entry: {
@@ -25,4 +33,4 @@ export default defineConfig({
     },
     cssCodeSplit: false,
   },
-});
+}));
