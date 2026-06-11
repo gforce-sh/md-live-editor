@@ -73,6 +73,11 @@
 .cm-content {
   font-family: var(--mle-font, "Ysabeau Infant", ui-sans-serif, system-ui, sans-serif);
   font-optical-sizing: auto;
+}
+/* CM6's base theme hardcodes the caret (.<gen> .cm-content { caret-color: black|white },
+   specificity 0,2,0), which beats a bare .cm-content rule. Out-specify it (0,3,0) so the
+   caret follows our --mle-text variable in every theme. */
+.md-live-editor .cm-editor .cm-content {
   caret-color: var(--mle-text);
 }
 .cm-content ::selection {
