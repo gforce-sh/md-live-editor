@@ -106,21 +106,23 @@ src/
 
 ## 9. Implementation slices (tracer bullets, TDD)
 
-**Done**
-- **Slice 0 — Editor skeleton.** Solid CM6 component with Live Preview + GFM tables, debounce/retry Autosave (capture-once), sandbox, `TableWidget` tests.
+All slices below are **done**.
+
+- **Slice 0 — Editor skeleton.** Solid CM6 component with Live Preview + GFM tables, debounce/retry Autosave, sandbox, `TableWidget` tests.
 - **Slice A — Headless status.** Removed the internal status chrome; editor emits `onSaveStatus`; the sandbox renders it.
 - **Slice B — Terminology.** `doc → initialContent`, `onSave(body) → onSave(content)`, `onStatusChange → onSaveStatus`; CONTEXT.md + ADRs.
+- **Slice C — Autosave hardening.** In-flight guard (one save at a time); `flushSave()` returns a Promise that resolves on quiescence and rejects on failure (retry continues in the background); `reset()` rebaseline. Unit-tested.
+- **Slice D — Imperative handle.** `getContent` / `setContent` / `flushSave` via a `ref` prop; `setContent` is programmatic — no Autosave, and resets the undo history via a history compartment.
+- **Slice E — Extract the Core.** `createMarkdownEditor(host, opts) → handle` in `src/core.ts`, framework-free; adapters delegate to it.
+- **Slice F — Solid adapter + subpath exports.** `src/solid.tsx` over the Core; `./core` + `./solid` exports; multi-entry build; `solid-js` optional peer.
+- **Slice G — React adapter.** `src/react.ts` over the Core (`createElement`, no JSX); latest-ref `onSave`; StrictMode-safe; `./react` export; `react` optional peer.
+- **Slice H — quick-note consumes `md-live-editor/solid`** with `initialContent`. It keeps remount-per-note (`<Show keyed>`), which the long-lived editor supports; adopting the in-place `setContent` switch handshake is deferred (§10).
 
-**Pending**
-- **Slice C — Autosave hardening.** Add the in-flight guard; make `flushSave()` return a Promise (resolve on quiesce, reject on failure); keep the retry. Pure unit tests first.
-- **Slice D — Imperative handle.** `getContent` / `setContent` / `flushSave` via a `ref` prop; `setContent` programmatic (no Autosave, reset undo history).
-- **Slice E — Extract the Core.** Move CM6 + Autosave wiring into `createMarkdownEditor(host, opts) → handle`; framework-free; `./core` export.
-- **Slice F — Solid Adapter.** Thin `<MarkdownEditor>` over the Core; keep `onSave` fresh; `./solid` export; optional peer dep.
-- **Slice G — React Adapter.** Thin `<MarkdownEditor>` over the Core; `useRef`-fresh `onSave`; StrictMode-safe mount; `./react` export; optional peer dep.
-- **Slice H — Re-wire quick-note** to `md-live-editor/solid` with `initialContent`, long-lived switching, and the save-before-switch handshake. (Separate repo; needs a package rebuild.)
+> **Not runtime-verified:** the editors' in-browser behavior (Live Preview, the React adapter under StrictMode) — build + types are green, but manual QA via the sandbox / a real React app remains.
 
 ## 10. Deferred
 
 - Theming via CSS custom properties (accent, font, code background).
 - A Vue (or vanilla-only) Adapter, if a Consumer needs one.
+- quick-note adopting the long-lived `setContent` switch handshake (it currently remounts per note).
 - Images / attachments.
