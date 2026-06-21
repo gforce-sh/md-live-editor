@@ -28,6 +28,8 @@ export interface MarkdownEditorProps {
   onSaveStatus?: (status: SaveStatus) => void;
   /** Colour scheme. "light" (default), "dark", or "system" (follows the OS). */
   theme?: Theme;
+  /** Override the editor background colour for each scheme. Omit to use defaults. */
+  bg?: { light?: string; dark?: string };
 }
 
 // JSX is deliberately avoided (plain createElement) so the package never has to
@@ -74,9 +76,13 @@ export const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorPro
       [],
     );
 
+    const bgStyle: Record<string, string> = {};
+    if (props.bg?.light) bgStyle["--mle-light-bg"] = props.bg.light;
+    if (props.bg?.dark) bgStyle["--mle-dark-bg"] = props.bg.dark;
+
     return createElement(
       "article",
-      { className: "md-live-editor", "data-theme": props.theme ?? "light" },
+      { className: "md-live-editor", "data-theme": props.theme ?? "light", style: bgStyle },
       createElement("div", { className: "md-live-editor-body", ref: hostRef }),
     );
   },

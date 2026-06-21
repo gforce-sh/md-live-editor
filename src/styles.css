@@ -17,15 +17,17 @@
 
 /* Outer article shell + theme variables. Switching themes is just the
    data-theme attribute; every colour below (and the link colour set in JS by
-   the syntax highlighter) reads from these vars. */
+   the syntax highlighter) reads from these vars.
+   Consumers can override just the background by setting --mle-light-bg /
+   --mle-dark-bg as inline CSS custom properties on the article element. */
 .md-live-editor {
   flex: 1;
   min-height: 0;
   display: flex;
   flex-direction: column;
 
-  /* Light (default) */
-  --mle-bg: #faf9f7;
+  /* Light (default) — bg falls through to --mle-light-bg if set by consumer */
+  --mle-bg: var(--mle-light-bg, #faf9f7);
   --mle-text: #1a1a1a;
   --mle-link: #2563eb;
   --mle-code-bg: #f0f0f0;
@@ -35,9 +37,9 @@
   --mle-mark: #9a9a9a;
 }
 
-/* Dark — explicit (data-theme="dark") */
+/* Dark — explicit (data-theme="dark") — bg falls through to --mle-dark-bg if set */
 .md-live-editor[data-theme="dark"] {
-  --mle-bg: #1e1e1e;
+  --mle-bg: var(--mle-dark-bg, #1e1e1e);
   --mle-text: #e4e4e4;
   --mle-link: #6aa3ff;
   --mle-code-bg: #2b2b2b;
@@ -50,7 +52,7 @@
 /* Dark — following the OS when data-theme="system" */
 @media (prefers-color-scheme: dark) {
   .md-live-editor[data-theme="system"] {
-    --mle-bg: #1e1e1e;
+    --mle-bg: var(--mle-dark-bg, #1e1e1e);
     --mle-text: #e4e4e4;
     --mle-link: #6aa3ff;
     --mle-code-bg: #2b2b2b;
