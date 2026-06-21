@@ -137,21 +137,29 @@
   user-select: none;
   pointer-events: none;
 }
-.cm-md-h1 {
+/* Specificity 0,3,0 to beat CM6 base theme's .ͼ1 .cm-line { padding: ... } at 0,2,0,
+   which would otherwise reset padding-bottom to 0 via the shorthand. */
+.cm-editor .cm-line.cm-md-h1 {
   font-size: 2.2em;
+  padding-bottom: 0.5em;
 }
-.cm-md-h2 {
+.cm-editor .cm-line.cm-md-h2 {
   font-size: 1.85em;
+  padding-bottom: 0.45em;
 }
-.cm-md-h3 {
+.cm-editor .cm-line.cm-md-h3 {
   font-size: 1.55em;
+  padding-bottom: 0.4em;
 }
-.cm-md-h4 {
+.cm-editor .cm-line.cm-md-h4 {
   font-size: 1.3em;
+  padding-bottom: 0.35em;
 }
-.cm-md-h5 {
+.cm-editor .cm-line.cm-md-h5 {
   font-size: 1.15em;
+  padding-bottom: 0.3em;
 }
-.cm-md-h6 {
+.cm-editor .cm-line.cm-md-h6 {
   font-size: 1.05em;
+  padding-bottom: 0.25em;
 }
