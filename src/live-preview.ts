@@ -99,6 +99,20 @@ export const livePreview = ViewPlugin.fromClass(
   { decorations: (v) => v.decorations },
 );
 
+class HrWidget extends WidgetType {
+  toDOM(): HTMLElement {
+    const hr = document.createElement("hr");
+    hr.className = "md-hr";
+    return hr;
+  }
+  eq(): boolean {
+    return true;
+  }
+  ignoreEvent(): boolean {
+    return false;
+  }
+}
+
 /** Split a markdown table row into trimmed cell strings. */
 function tableCells(line: string): string[] {
   let l = line.trim();
@@ -155,33 +169,45 @@ export class TableWidget extends WidgetType {
   }
 }
 
-function buildTableDecorations(state: EditorState): DecorationSet {
+function buildBlockDecorations(state: EditorState): DecorationSet {
   const decos: Range<Decoration>[] = [];
   syntaxTree(state).iterate({
     enter: (node) => {
-      if (node.name !== "Table") return;
-      if (!selectionTouches(state, node.from, node.to)) {
-        const source = state.doc.sliceString(node.from, node.to);
-        decos.push(
-          Decoration.replace({
-            widget: new TableWidget(source),
-            block: true,
-          }).range(node.from, node.to),
-        );
+      if (node.name === "HorizontalRule") {
+        if (!selectionTouches(state, node.from, node.to)) {
+          decos.push(
+            Decoration.replace({
+              widget: new HrWidget(),
+              block: true,
+            }).range(node.from, node.to),
+          );
+        }
+        return false;
       }
-      return false;
+      if (node.name === "Table") {
+        if (!selectionTouches(state, node.from, node.to)) {
+          const source = state.doc.sliceString(node.from, node.to);
+          decos.push(
+            Decoration.replace({
+              widget: new TableWidget(source),
+              block: true,
+            }).range(node.from, node.to),
+          );
+        }
+        return false;
+      }
     },
   });
   return Decoration.set(decos, true);
 }
 
-/** CodeMirror extension that renders GFM tables as HTML tables. */
+/** CodeMirror extension that renders GFM tables and horizontal rules as block widgets. */
 export const tablePreview = StateField.define<DecorationSet>({
   create(state) {
-    return buildTableDecorations(state);
+    return buildBlockDecorations(state);
   },
   update(deco, tr) {
-    if (tr.docChanged || tr.selection) return buildTableDecorations(tr.state);
+    if (tr.docChanged || tr.selection) return buildBlockDecorations(tr.state);
     return deco;
   },
   provide: (f) => EditorView.decorations.from(f),

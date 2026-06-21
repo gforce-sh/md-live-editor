@@ -111,6 +111,13 @@
   font-weight: 700;
 }
 
+/* Block widgets (rendered by live-preview.ts) */
+.md-hr {
+  border: none;
+  border-top: 1px solid var(--mle-border);
+  margin: 0.5em 0;
+}
+
 /* Inline decoration classes (applied by live-preview.ts) */
 .cm-md-strong {
   font-weight: 700;
