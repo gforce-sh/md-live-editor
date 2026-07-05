@@ -72,6 +72,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorPro
         getContent: () => editorRef.current?.getContent() ?? "",
         setContent: (content) => editorRef.current?.setContent(content),
         flushSave: () => editorRef.current?.flushSave() ?? Promise.resolve(),
+        focus: () => editorRef.current?.focus(),
       }),
       [],
     );

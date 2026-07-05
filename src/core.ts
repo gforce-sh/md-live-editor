@@ -34,6 +34,8 @@ export interface MarkdownEditorHandle {
   setContent(content: string): void;
   /** Force a save now, skipping the debounce. Resolves when persisted, rejects on failure. */
   flushSave(): Promise<void>;
+  /** Move focus into the editor so the caret is visible and typing works immediately. */
+  focus(): void;
 }
 
 export interface MarkdownEditorOptions {
@@ -112,6 +114,7 @@ export function createMarkdownEditor(
       autosave.reset(content);
     },
     flushSave: () => autosave.flushSave(),
+    focus: () => view.focus(),
     destroy: () => {
       unsubscribe();
       void autosave.flushSave().catch(() => {}); // best-effort persist on unmount
