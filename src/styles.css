@@ -1,18 +1,18 @@
 /* Bundled default font (Ysabeau Infant, latin subset, OFL). Hosts that want a
    different face can override --mle-font (and load their own font). */
 @font-face {
-  font-family: "Ysabeau Infant";
+  font-family: 'Ysabeau Infant';
   font-style: normal;
   font-weight: 1 1000;
   font-display: swap;
-  src: url("./fonts/ysabeau-infant-latin.woff2") format("woff2");
+  src: url('./fonts/ysabeau-infant-latin.woff2') format('woff2');
 }
 @font-face {
-  font-family: "Ysabeau Infant";
+  font-family: 'Ysabeau Infant';
   font-style: italic;
   font-weight: 1 1000;
   font-display: swap;
-  src: url("./fonts/ysabeau-infant-latin-italic.woff2") format("woff2");
+  src: url('./fonts/ysabeau-infant-latin-italic.woff2') format('woff2');
 }
 
 /* Outer article shell + theme variables. Switching themes is just the
@@ -38,7 +38,7 @@
 }
 
 /* Dark — explicit (data-theme="dark") — bg falls through to --mle-dark-bg if set */
-.md-live-editor[data-theme="dark"] {
+.md-live-editor[data-theme='dark'] {
   --mle-bg: var(--mle-dark-bg, #1e1e1e);
   --mle-text: #e4e4e4;
   --mle-link: #6aa3ff;
@@ -51,7 +51,7 @@
 
 /* Dark — following the OS when data-theme="system" */
 @media (prefers-color-scheme: dark) {
-  .md-live-editor[data-theme="system"] {
+  .md-live-editor[data-theme='system'] {
     --mle-bg: var(--mle-dark-bg, #1e1e1e);
     --mle-text: #e4e4e4;
     --mle-link: #6aa3ff;
@@ -76,8 +76,17 @@
   color: var(--mle-text);
 }
 .cm-content {
-  font-family: var(--mle-font, "Ysabeau Infant", ui-sans-serif, system-ui, sans-serif);
+  font-family: var(
+    --mle-font,
+    'Ysabeau Infant',
+    ui-sans-serif,
+    system-ui,
+    sans-serif
+  );
   font-optical-sizing: auto;
+  /* Bump the base text size 10%. Every heading below is em-relative, so h2–h6
+     scale up with it; h1's multiplier is lowered to hold its pixel size steady. */
+  font-size: 1.1em;
 }
 /* CM6's base theme hardcodes the caret (.<gen> .cm-content { caret-color: black|white },
    specificity 0,2,0), which beats a bare .cm-content rule. Out-specify it (0,3,0) so the
@@ -147,11 +156,11 @@
 /* Specificity 0,3,0 to beat CM6 base theme's .ͼ1 .cm-line { padding: ... } at 0,2,0,
    which would otherwise reset padding-bottom to 0 via the shorthand. */
 .cm-editor .cm-line.cm-md-h1 {
-  font-size: 2.2em;
+  font-size: 2em;
   padding-bottom: 0.5em;
 }
 .cm-editor .cm-line.cm-md-h2 {
-  font-size: 1.85em;
+  font-size: 1.75em;
   padding-bottom: 0.45em;
 }
 .cm-editor .cm-line.cm-md-h3 {
