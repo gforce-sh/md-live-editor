@@ -86,7 +86,7 @@
   font-optical-sizing: auto;
   /* Bump the base text size 10%. Every heading below is em-relative, so h2–h6
      scale up with it; h1's multiplier is lowered to hold its pixel size steady. */
-  font-size: 1.1em;
+  font-size: 1.1rem;
 }
 /* CM6's base theme hardcodes the caret (.<gen> .cm-content { caret-color: black|white },
    specificity 0,2,0), which beats a bare .cm-content rule. Out-specify it (0,3,0) so the
@@ -107,7 +107,7 @@
 /* GFM table widget */
 .md-table {
   border-collapse: collapse;
-  margin: 8px 0;
+  margin: 0;
 }
 .md-table th,
 .md-table td {
@@ -124,7 +124,7 @@
 .md-hr {
   border: none;
   border-top: 1px solid var(--mle-border);
-  margin: 0.5em 0;
+  margin: 0;
 }
 
 /* Inline decoration classes (applied by live-preview.ts) */
@@ -136,7 +136,7 @@
 }
 .cm-md-code {
   font-family: ui-monospace, monospace;
-  font-size: 12px;
+  font-size: 0.85rem;
   background: var(--mle-code-bg);
   padding: 0 2px;
   border-radius: 3px;
@@ -146,8 +146,12 @@
   line-height: 1.3;
   text-decoration: none;
 }
-/* Hidden header mark: stays in DOM at zero size so it can't alter the line's measured height. */
+/* Hidden header mark: use visibility:hidden (not font-size:0) so getClientRects()
+   returns consistent dimensions whether the heading is revealed or hidden.
+   Zero-size elements return empty/zero-height rects, which can confuse
+   CodeMirror's posAtCoords → posAtDOM → clientRectsFor cursor-position lookup. */
 .cm-md-header-mark-hidden {
+  visibility: hidden;
   font-size: 0;
   line-height: 0;
   user-select: none;
@@ -156,26 +160,26 @@
 /* Specificity 0,3,0 to beat CM6 base theme's .ͼ1 .cm-line { padding: ... } at 0,2,0,
    which would otherwise reset padding-bottom to 0 via the shorthand. */
 .cm-editor .cm-line.cm-md-h1 {
-  font-size: 2em;
-  padding-bottom: 0.5em;
+  font-size: 2rem;
+  padding-bottom: 0.5rem;
 }
 .cm-editor .cm-line.cm-md-h2 {
-  font-size: 1.75em;
-  padding-bottom: 0.45em;
+  font-size: 1.75rem;
+  padding-bottom: 0.45rem;
 }
 .cm-editor .cm-line.cm-md-h3 {
-  font-size: 1.55em;
-  padding-bottom: 0.4em;
+  font-size: 1.55rem;
+  padding-bottom: 0.4rem;
 }
 .cm-editor .cm-line.cm-md-h4 {
-  font-size: 1.3em;
-  padding-bottom: 0.35em;
+  font-size: 1.3rem;
+  padding-bottom: 0.35rem;
 }
 .cm-editor .cm-line.cm-md-h5 {
-  font-size: 1.15em;
-  padding-bottom: 0.3em;
+  font-size: 1.15rem;
+  padding-bottom: 0.3rem;
 }
 .cm-editor .cm-line.cm-md-h6 {
-  font-size: 1.05em;
-  padding-bottom: 0.25em;
+  font-size: 1.05rem;
+  padding-bottom: 0.25rem;
 }
