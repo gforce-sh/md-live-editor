@@ -13,16 +13,7 @@ function selectionTouches(state: EditorState, from: number, to: number): boolean
   return state.selection.ranges.some((r) => r.from <= to && r.to >= from);
 }
 
-/**
- * True if the given position's line is touched by a selection (the "active"
- * line). When the editor is not focused, no line is active — so markers stay
- * concealed after you click away.
- */
-function lineIsActive(view: EditorView, pos: number): boolean {
-  if (!view.hasFocus) return false;
-  const line = view.state.doc.lineAt(pos);
-  return selectionTouches(view.state, line.from, line.to);
-}
+
 
 function buildInlineDecorations(view: EditorView): DecorationSet {
   const decos: Range<Decoration>[] = [];
@@ -58,6 +49,21 @@ function buildInlineDecorations(view: EditorView): DecorationSet {
           return;
         }
 
+        // Fenced code blocks: add a class to every line inside CodeText.
+        // CodeText is the node that wraps the actual code content (not the
+        // fence markers or language info).  We keep line-level decoration
+        // because the content is multi-line code that shouldn't be replaced.
+        if (name === "CodeText") {
+          const doc = view.state.doc;
+          const line = doc.lineAt(node.from);
+          let current = line;
+          while (current.from < node.to) {
+            decos.push(Decoration.line({ class: "cm-md-fenced-code" }).range(current.from));
+            current = doc.lineAt(current.to + 1);
+          }
+          return;
+        }
+
         if (name === "HeaderMark" && node.to > node.from && !lineIsActive(view, node.from)) {
           let to = node.to;
           const doc = view.state.doc;
@@ -68,14 +74,39 @@ function buildInlineDecorations(view: EditorView): DecorationSet {
           decos.push(Decoration.mark({ class: "cm-md-header-mark-hidden" }).range(node.from, to));
         }
         const isInlineMarker = name === "EmphasisMark" || name === "CodeMark";
-        if (isInlineMarker && node.to > node.from && !lineIsActive(view, node.from)) {
-          decos.push(Decoration.replace({}).range(node.from, node.to));
+        if (isInlineMarker && node.to > node.from && node.node.parent) {
+          // Check against the parent span (e.g. `StrongEmphasis [5-13]` for
+          // `**bold**`) so clicking anywhere on the formatted content reveals
+          // both opening and closing markers, not just the one nearest the cursor.
+          const parent = node.node.parent;
+          if (!spanIsActive(view, parent.from, parent.to)) {
+            decos.push(Decoration.replace({}).range(node.from, node.to));
+          }
         }
       },
     });
   }
 
   return Decoration.set(decos, true);
+}
+
+/**
+ * True if the cursor is directly on the given span (the "active" span).
+ * Returns false when the editor has no focus — nothing is active then.
+ */
+function spanIsActive(view: EditorView, from: number, to: number): boolean {
+  if (!view.hasFocus) return false;
+  return selectionTouches(view.state, from, to);
+}
+
+/**
+ * True if the cursor is on the given span's line (the "active" line).
+ * Returns false when the editor has no focus — nothing is active then.
+ */
+function lineIsActive(view: EditorView, pos: number): boolean {
+  if (!view.hasFocus) return false;
+  const line = view.state.doc.lineAt(pos);
+  return selectionTouches(view.state, line.from, line.to);
 }
 
 /** CodeMirror extension providing the inline Live Preview decorations. */

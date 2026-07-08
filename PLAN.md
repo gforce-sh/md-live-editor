@@ -120,6 +120,12 @@ All slices below are **done**.
 
 > **Not runtime-verified:** the editors' in-browser behavior (Live Preview, the React adapter under StrictMode) — build + types are green, but manual QA via the sandbox / a real React app remains.
 
+## 9.5. Bug fix — `posAtCoords` Y-offset after block widgets
+
+- **Root cause:** `.md-table` had `margin: 8px 0;` (16px total), and `.md-hr` had `margin: 0.5em 0;` — margins injected into `.cm-content` between `.cm-line` elements that CodeMirror's `HeightOracle` does not account for when building the `HeightMap`. Lines after a table widget saw `posAtCoords` transition ~16px early.
+- **Fix:** Changed both `.md-table` and `.md-hr` to `margin: 0` in `src/styles.css`. The table border and cell padding provide all necessary visual breathing room; margins are redundant and break CM6's cumulative height tracking.
+- **Verified:** `posAtCoords` tested at top/mid/bottom of all 25 DOM lines — every line maps to its correct document line, including all lines after the table widget.
+
 ## 10. Deferred
 
 - Theming via CSS custom properties (accent, font, code background).
