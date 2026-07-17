@@ -36,6 +36,8 @@ export interface MarkdownEditorHandle {
   flushSave(): Promise<void>;
   /** Move focus into the editor so the caret is visible and typing works immediately. */
   focus(): void;
+  /** Move the cursor to *pos* (0-based). */
+  setCursor(pos: number): void;
 }
 
 export interface MarkdownEditorOptions {
@@ -115,6 +117,12 @@ export function createMarkdownEditor(
     },
     flushSave: () => autosave.flushSave(),
     focus: () => view.focus(),
+    setCursor: (pos: number) => {
+      view.dispatch({
+        selection: { anchor: pos },
+      });
+      view.focus();
+    },
     destroy: () => {
       unsubscribe();
       void autosave.flushSave().catch(() => {}); // best-effort persist on unmount
