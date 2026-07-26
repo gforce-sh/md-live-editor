@@ -133,6 +133,18 @@
   margin: 0;
 }
 
+/* Bullet list marker widget (replaces "-" when the caret is off the marker).
+   No margins — margins inside .cm-content desync CodeMirror's HeightMap and
+   break posAtCoords (see PLAN.md §9.5). Padding on an inline box is safe. */
+.md-bullet {
+  color: var(--mle-text);
+  /* Gap between the marker and the item's text. Horizontal padding on an inline
+     box doesn't affect line height, so it's safe here; vertical margin/padding
+     would not be. Em-relative so it tracks the font size. */
+  padding-right: 0.45em;
+  margin: 0;
+}
+
 /* Inline decoration classes (applied by live-preview.ts) */
 .cm-md-strong {
   font-weight: 700;

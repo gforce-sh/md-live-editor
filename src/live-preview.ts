@@ -36,6 +36,18 @@ function buildInlineDecorations(view: EditorView): DecorationSet {
           );
           return;
         }
+        // Bullet list markers render as a filled circle; the source stays "-".
+        // Ordered markers ("1.") are left alone — they already read as a list.
+        if (name === "ListMark") {
+          const doc = view.state.doc;
+          if (!/^[-*+]$/.test(doc.sliceString(node.from, node.to))) return;
+          if (!markerIsActive(view, node.to)) {
+            decos.push(
+              Decoration.replace({ widget: new BulletWidget() }).range(node.from, node.to),
+            );
+          }
+          return;
+        }
         if (name === "StrongEmphasis") {
           decos.push(Decoration.mark({ class: "cm-md-strong" }).range(node.from, node.to));
           return;
@@ -107,6 +119,39 @@ function lineIsActive(view: EditorView, pos: number): boolean {
   if (!view.hasFocus) return false;
   const line = view.state.doc.lineAt(pos);
   return selectionTouches(view.state, line.from, line.to);
+}
+
+/**
+ * True if the cursor is anywhere left of a list item's text — in the leading
+ * indent, on the marker itself, or in the space between marker and text. That
+ * whole gutter reveals the raw "-"; putting the caret in the item's text shows
+ * the circle again. `markEnd` is the position just after the marker.
+ */
+function markerIsActive(view: EditorView, markEnd: number): boolean {
+  if (!view.hasFocus) return false;
+  const doc = view.state.doc;
+  const line = doc.lineAt(markEnd);
+  let contentStart = markEnd;
+  while (contentStart < line.to && /[ \t]/.test(doc.sliceString(contentStart, contentStart + 1))) {
+    contentStart++;
+  }
+  return selectionTouches(view.state, line.from, contentStart);
+}
+
+/** Renders a bullet list marker as a filled circle. */
+export class BulletWidget extends WidgetType {
+  toDOM(): HTMLElement {
+    const span = document.createElement("span");
+    span.className = "md-bullet";
+    span.textContent = "•";
+    return span;
+  }
+  eq(): boolean {
+    return true;
+  }
+  ignoreEvent(): boolean {
+    return false;
+  }
 }
 
 /** CodeMirror extension providing the inline Live Preview decorations. */

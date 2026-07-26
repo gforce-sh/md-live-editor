@@ -1,4 +1,4 @@
-import { Annotation, Compartment, EditorState } from "@codemirror/state";
+import { Annotation, Compartment, EditorState, Prec } from "@codemirror/state";
 import { EditorView, keymap } from "@codemirror/view";
 import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
 import { syntaxHighlighting, HighlightStyle } from "@codemirror/language";
@@ -6,6 +6,7 @@ import { tags } from "@lezer/highlight";
 import { markdown } from "@codemirror/lang-markdown";
 import { GFM } from "@lezer/markdown";
 import { livePreview, tablePreview } from "./live-preview";
+import { listKeymap } from "./list-indent";
 import { createAutosave, type SaveStatus } from "./autosave";
 
 const markdownHighlight = HighlightStyle.define([
@@ -86,6 +87,9 @@ export function createMarkdownEditor(
       doc: opts.initialContent,
       extensions: [
         historyConf.of(history()),
+        // List indentation must outrank defaultKeymap's Backspace binding; it
+        // declines every key it doesn't handle, so deletion is otherwise normal.
+        Prec.high(keymap.of([...listKeymap])),
         keymap.of([...defaultKeymap, ...historyKeymap]),
         markdown({ extensions: GFM }),
         syntaxHighlighting(markdownHighlight),
