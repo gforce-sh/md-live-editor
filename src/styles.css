@@ -78,13 +78,15 @@
 }
 
 .cm-content {
-  font-family: var(--mle-font,
-      'Ysabeau Infant',
-      ui-sans-serif,
-      system-ui,
-      sans-serif);
+  font-family: var(
+    --mle-font,
+    'Ysabeau Infant',
+    ui-sans-serif,
+    system-ui,
+    sans-serif
+  );
   font-optical-sizing: auto;
-  /* Bump the base text size 10%. Every heading below is em-relative, so h2–h6
+  /* Bump the base text size 10%. Every heading below is em-relative, so h2–h5
      scale up with it; h1's multiplier is lowered to hold its pixel size steady. */
   font-size: 1.1rem;
 }
@@ -190,31 +192,31 @@
 /* Specificity 0,3,0 to beat CM6 base theme's .ͼ1 .cm-line { padding: ... } at 0,2,0,
    which would otherwise reset padding-bottom to 0 via the shorthand. */
 .cm-editor .cm-line.cm-md-h1 {
-  font-size: 2rem;
+  font-size: 2.2rem;
   padding-bottom: 0.5rem;
 }
 
 .cm-editor .cm-line.cm-md-h2 {
-  font-size: 1.75rem;
+  font-size: 1.9rem;
   padding-bottom: 0.45rem;
 }
 
 .cm-editor .cm-line.cm-md-h3 {
-  font-size: 1.55rem;
+  font-size: 1.7rem;
   padding-bottom: 0.4rem;
 }
 
 .cm-editor .cm-line.cm-md-h4 {
-  font-size: 1.3rem;
+  font-size: 1.5rem;
   padding-bottom: 0.35rem;
 }
 
 .cm-editor .cm-line.cm-md-h5 {
-  font-size: 1.15rem;
+  font-size: 1.3rem;
   padding-bottom: 0.3rem;
 }
 
 .cm-editor .cm-line.cm-md-h6 {
-  font-size: 1.05rem;
+  font-size: 1.1rem;
   padding-bottom: 0.25rem;
 }
