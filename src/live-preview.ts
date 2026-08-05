@@ -1,5 +1,6 @@
 import { syntaxTree } from "@codemirror/language";
-import { type EditorState, type Range, StateField } from "@codemirror/state";
+import type { SyntaxNode, Tree } from "@lezer/common";
+import { type EditorState, type Range, StateField, type Text } from "@codemirror/state";
 import {
   Decoration,
   type DecorationSet,
@@ -13,7 +14,70 @@ function selectionTouches(state: EditorState, from: number, to: number): boolean
   return state.selection.ranges.some((r) => r.from <= to && r.to >= from);
 }
 
+/**
+ * Width of one nesting level, and so of the bullet's own column. Kept as a CSS
+ * custom property (see styles.css) so the hanging indent and the prefix widget
+ * are always derived from the same number.
+ */
+const LIST_INDENT = "var(--mle-list-indent)";
 
+/** The CSS width a list item's prefix occupies at `depth` levels of nesting. */
+function hangWidth(depth: number): string {
+  return `calc(${depth + 1} * ${LIST_INDENT})`;
+}
+
+/**
+ * Nesting depth of a list item, counted from the enclosing List nodes.
+ *
+ * Deliberately not derived from the leading whitespace: markdown nests on one
+ * space or on eight, and dividing columns by tabSize silently floors a
+ * two-space indent (the most common style) to depth zero, collapsing the level.
+ * The parser has already resolved what nests inside what — ask it.
+ */
+function listDepth(marker: SyntaxNode): number {
+  let depth = -1;
+  for (let n: SyntaxNode | null = marker; n; n = n.parent) {
+    if (/List$/.test(n.name)) depth++;
+  }
+  return Math.max(depth, 0);
+}
+
+/**
+ * Start positions of the source lines an item's text is hard-wrapped onto —
+ * the lines after the marker's own that still belong to this item and carry no
+ * marker of their own. Lines owned by a nested item are excluded: that item
+ * decorates them itself, at its own depth.
+ */
+function continuationLines(
+  tree: Tree,
+  doc: Text,
+  marker: SyntaxNode,
+): { from: number; textStart: number }[] {
+  const item = marker.parent;
+  if (!item || item.name !== "ListItem") return [];
+
+  const starts: { from: number; textStart: number }[] = [];
+  for (let n = doc.lineAt(marker.from).number + 1; n <= doc.lines; n++) {
+    const line = doc.line(n);
+    if (line.from > item.to) break;
+    // Resolve at the line's first non-space character: resolving at the line
+    // start would land outside the item for an indented continuation.
+    const textStart = line.from + /^[ \t]*/.exec(line.text)![0].length;
+    let owner: SyntaxNode | null = tree.resolveInner(textStart, 1);
+    while (owner && owner.name !== "ListItem") owner = owner.parent;
+    if (!owner || owner.from !== item.from) break;
+    starts.push({ from: line.from, textStart });
+  }
+  return starts;
+}
+
+/** Position where an item's text begins, given the position just after its marker. */
+function contentStartOf(doc: Text, markEnd: number): number {
+  const line = doc.lineAt(markEnd);
+  let pos = markEnd;
+  while (pos < line.to && /[ \t]/.test(doc.sliceString(pos, pos + 1))) pos++;
+  return pos;
+}
 
 function buildInlineDecorations(view: EditorView): DecorationSet {
   const decos: Range<Decoration>[] = [];
@@ -41,10 +105,50 @@ function buildInlineDecorations(view: EditorView): DecorationSet {
         if (name === "ListMark") {
           const doc = view.state.doc;
           if (!/^[-*+]$/.test(doc.sliceString(node.from, node.to))) return;
-          if (!markerIsActive(view, node.to)) {
+          // The item's prefix — leading indent, marker, and the space after it —
+          // is boxed at a width we control, and the line hangs by that same
+          // width. The first line's text origin and the wrapped lines' left edge
+          // are then derived from one number and cannot disagree, whatever font
+          // or tab-size is in play (the editor font is proportional, so a ch/em
+          // estimate would drift).
+          const line = doc.lineAt(node.from);
+          const depth = listDepth(node.node);
+          const prefixEnd = contentStartOf(doc, node.to);
+          decos.push(
+            Decoration.line({
+              class: "cm-md-list-item",
+              attributes: { style: `--mle-hang: ${hangWidth(depth)}` },
+            }).range(line.from),
+            markerIsActive(view, node.to)
+              ? // Editing the prefix: the raw "- " must stay real, editable text,
+                // so box it with a mark rather than swapping in the widget. Same
+                // width, so the hang stays true and the text doesn't shift.
+                Decoration.mark({ class: "md-list-prefix" }).range(line.from, prefixEnd)
+              : Decoration.replace({ widget: new BulletWidget(depth) }).range(
+                  line.from,
+                  prefixEnd,
+                ),
+          );
+          // An item's text can also be hard-wrapped across several source
+          // lines. Those continuation lines are separate .cm-line elements with
+          // no prefix of their own, so they need the same indent applied as
+          // plain padding — without it they sit at the left margin and the item
+          // looks ragged even though its soft-wrapped rows line up.
+          for (const cont of continuationLines(tree, doc, node.node)) {
             decos.push(
-              Decoration.replace({ widget: new BulletWidget() }).range(node.from, node.to),
+              Decoration.line({
+                class: "cm-md-list-continuation",
+                attributes: { style: `--mle-hang: ${hangWidth(depth)}` },
+              }).range(cont.from),
             );
+            // Such a line is usually also indented in the source to line up
+            // under its item. That indent is now the padding's job — drawing it
+            // as well would indent the line twice. Hidden even while the caret
+            // is on the line: it is structure rather than content, and
+            // revealing it would shift the text mid-edit.
+            if (cont.textStart > cont.from) {
+              decos.push(Decoration.replace({}).range(cont.from, cont.textStart));
+            }
           }
           return;
         }
@@ -71,7 +175,10 @@ function buildInlineDecorations(view: EditorView): DecorationSet {
           let current = line;
           while (current.from < node.to) {
             decos.push(Decoration.line({ class: "cm-md-fenced-code" }).range(current.from));
-            current = doc.lineAt(current.to + 1);
+            // Stop at the last line: an unterminated code block runs to the end
+            // of the document, and lineAt(to + 1) would then be out of range.
+            if (current.number === doc.lines) break;
+            current = doc.line(current.number + 1);
           }
           return;
         }
@@ -126,28 +233,45 @@ function lineIsActive(view: EditorView, pos: number): boolean {
  * indent, on the marker itself, or in the space between marker and text. That
  * whole gutter reveals the raw "-"; putting the caret in the item's text shows
  * the circle again. `markEnd` is the position just after the marker.
+ *
+ * The text start itself belongs to the text, not the gutter: a caret there sits
+ * before the item's first letter, which is a text position the user arrowed to.
+ * Counting it as the gutter left the raw source showing at that position, so
+ * the first Right that finally rendered the bullet had already stepped past the
+ * first letter — the caret appeared to skip it.
  */
 function markerIsActive(view: EditorView, markEnd: number): boolean {
   if (!view.hasFocus) return false;
   const doc = view.state.doc;
   const line = doc.lineAt(markEnd);
-  let contentStart = markEnd;
-  while (contentStart < line.to && /[ \t]/.test(doc.sliceString(contentStart, contentStart + 1))) {
-    contentStart++;
-  }
-  return selectionTouches(view.state, line.from, contentStart);
+  const contentStart = contentStartOf(doc, markEnd);
+  // Half-open [line.from, contentStart): a range merely ending at contentStart
+  // still overlaps the gutter, but a caret sitting exactly there does not.
+  return view.state.selection.ranges.some((r) => r.from < contentStart && r.to >= line.from);
 }
 
-/** Renders a bullet list marker as a filled circle. */
+/**
+ * Renders a bullet list item's whole prefix — its indentation and marker — as a
+ * filled circle in a fixed-width box. The box width matches the line's hanging
+ * indent, so wrapped text lines up under the first line's text.
+ */
 export class BulletWidget extends WidgetType {
+  constructor(readonly depth: number) {
+    super();
+  }
   toDOM(): HTMLElement {
     const span = document.createElement("span");
     span.className = "md-bullet";
     span.textContent = "•";
+    // The box spans the item's whole prefix; the leading `depth` levels are the
+    // indentation, so pad past them and the glyph lands in its own column —
+    // otherwise every bullet, however deeply nested, sits at the line's start.
+    span.style.width = hangWidth(this.depth);
+    span.style.paddingLeft = `calc(${this.depth} * ${LIST_INDENT})`;
     return span;
   }
-  eq(): boolean {
-    return true;
+  eq(other: BulletWidget): boolean {
+    return other.depth === this.depth;
   }
   ignoreEvent(): boolean {
     return false;

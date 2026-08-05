@@ -36,6 +36,11 @@
   --mle-th-bg: #f0efe9;
   --mle-selection: #b9d6ff;
   --mle-mark: #9a9a9a;
+  /* Width of one list nesting level, and of the bullet's own column. Both the
+     prefix widget and the line's hanging indent are derived from it, so they
+     stay in lockstep — see .cm-md-list-item and BulletWidget. Em-relative so it
+     tracks the font size. Not theme-dependent, so it lives here only. */
+  --mle-list-indent: 1.4em;
 }
 
 /* Dark — explicit (data-theme="dark") — bg falls through to --mle-dark-bg if set */
@@ -135,16 +140,62 @@
   margin: 0;
 }
 
-/* Bullet list marker widget (replaces "-" when the caret is off the marker).
+/* Bullet list prefix widget (replaces the indent + "-" + space when the caret
+   is off the marker).
    No margins — margins inside .cm-content desync CodeMirror's HeightMap and
    break posAtCoords (see PLAN.md §9.5). Padding on an inline box is safe. */
 .md-bullet {
   color: var(--mle-text);
-  /* Gap between the marker and the item's text. Horizontal padding on an inline
-     box doesn't affect line height, so it's safe here; vertical margin/padding
-     would not be. Em-relative so it tracks the font size. */
-  padding-right: 0.45em;
+  /* The widget stands in for the item's entire prefix (indent + marker + the
+     space after it), so it carries that prefix's full width — set inline by
+     BulletWidget from the same calc() the line's hanging indent uses. The gap
+     before the text is whatever the box leaves over past the glyph. */
+  display: inline-block;
+  /* The inline padding-left that positions the glyph is inside the declared
+     width, not added to it, so the box still matches the line's hang exactly. */
+  box-sizing: border-box;
   margin: 0;
+  /* The line sets a negative text-indent for its hanging indent; cancel it
+     inside the box, or the glyph inherits it and is dragged a full hang to the
+     left, out of the box entirely. */
+  text-indent: 0;
+}
+
+/* The raw prefix, shown in place of the bullet while the caret is on it. Boxed
+   to exactly the line's hang so the wrapped text keeps its alignment mid-edit —
+   the raw "\t- " is real text whose own width is font- and tab-size-dependent,
+   which is why it can't be left to size itself. */
+.md-list-prefix {
+  display: inline-block;
+  width: var(--mle-hang);
+  /* The line's negative text-indent would otherwise be inherited and drag the
+     raw prefix out of its box. Measured: without this it starts a full hang to
+     the left. Same reason as .md-bullet. */
+  text-indent: 0;
+}
+
+/* Hanging indent for bullet list items: the first line is pulled back out to
+   the prefix's start, so every wrapped line lands under the item's text rather
+   than under the bullet. --mle-hang is set per line by live-preview.ts and
+   equals the prefix widget's width.
+
+   Horizontal only — padding/text-indent on the inline axis leave line heights
+   untouched, so CodeMirror's HeightMap stays accurate (vertical margins here
+   would not; see PLAN.md §9.5).
+
+   The 6px matches CM6's base .cm-line left padding, which this rule's higher
+   specificity (0,3,0 vs 0,2,0) would otherwise drop — keeping it means a list
+   item's first line starts exactly where any other line does. */
+.cm-editor .cm-line.cm-md-list-item {
+  padding-left: calc(var(--mle-hang) + 6px);
+  text-indent: calc(-1 * var(--mle-hang));
+}
+
+/* A hard-wrapped item's later source lines. Same indent, but no negative
+   text-indent — they have no prefix to pull back out, so every row of them
+   sits in the item's text column. */
+.cm-editor .cm-line.cm-md-list-continuation {
+  padding-left: calc(var(--mle-hang) + 6px);
 }
 
 /* Inline decoration classes (applied by live-preview.ts) */
