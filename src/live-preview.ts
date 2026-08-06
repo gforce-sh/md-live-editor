@@ -48,7 +48,7 @@ function listDepth(marker: SyntaxNode): number {
  * marker of their own. Lines owned by a nested item are excluded: that item
  * decorates them itself, at its own depth.
  */
-function continuationLines(
+export function continuationLines(
   tree: Tree,
   doc: Text,
   marker: SyntaxNode,
@@ -71,8 +71,13 @@ function continuationLines(
   return starts;
 }
 
-/** Position where an item's text begins, given the position just after its marker. */
-function contentStartOf(doc: Text, markEnd: number): number {
+/**
+ * Position where an item's text begins, given the position just after its marker.
+ *
+ * Exported alongside `continuationLines` for `search.ts`: search has to know
+ * exactly which characters this module hides, and the two must not drift apart.
+ */
+export function contentStartOf(doc: Text, markEnd: number): number {
   const line = doc.lineAt(markEnd);
   let pos = markEnd;
   while (pos < line.to && /[ \t]/.test(doc.sliceString(pos, pos + 1))) pos++;

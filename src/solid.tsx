@@ -4,10 +4,20 @@ import {
   type MarkdownEditorHandle,
   type MarkdownEditorInstance,
   type SaveStatus,
+  type SearchController,
+  type SearchOptions,
+  type SearchState,
   type Theme,
 } from "./core";
 
-export type { MarkdownEditorHandle, SaveStatus, Theme };
+export type {
+  MarkdownEditorHandle,
+  SaveStatus,
+  SearchController,
+  SearchOptions,
+  SearchState,
+  Theme,
+};
 
 export interface MarkdownEditorProps {
   /** Initial content. Read once on mount; replace it afterwards via the handle's setContent. */
@@ -20,6 +30,8 @@ export interface MarkdownEditorProps {
   retryMs?: number;
   /** Called whenever the save status changes. The host renders the status itself. */
   onSaveStatus?: (status: SaveStatus) => void;
+  /** Called whenever search state changes. The host renders the counter itself. */
+  onSearchState?: (state: SearchState) => void;
   /** Colour scheme. "light" (default), "dark", or "system" (follows the OS). */
   theme?: Theme;
   /** Override the editor background colour for each scheme. Omit to use defaults. */
@@ -41,6 +53,7 @@ export function MarkdownEditor(props: MarkdownEditorProps) {
       debounceMs: props.debounceMs,
       retryMs: props.retryMs,
       onSaveStatus: (s) => props.onSaveStatus?.(s),
+      onSearchState: (s) => props.onSearchState?.(s),
     });
     props.ref?.(editor);
   });

@@ -75,3 +75,48 @@ body {
 .sandbox-log-empty {
   color: #aaa;
 }
+
+/* Search box — the demo of the headless search API. */
+.sandbox-search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 16px;
+  border-bottom: 1px solid #e2e2e2;
+  background: #f2f4f7;
+  flex-shrink: 0;
+}
+
+.sandbox-search-input {
+  font-size: 0.9em;
+  padding: 4px 8px;
+  min-width: 22ch;
+  border: 1px solid #c8c8c8;
+  border-radius: 3px;
+}
+
+.sandbox-search-input[aria-invalid='true'] {
+  border-color: #c0392b;
+}
+
+.sandbox-search-count {
+  font-size: 0.82em;
+  color: #666;
+  min-width: 10ch;
+}
+
+.sandbox-search button {
+  font-size: 0.82em;
+  padding: 3px 8px;
+  cursor: pointer;
+}
+
+.sandbox-search-opt {
+  font-family: ui-monospace, monospace;
+  min-width: 3.2em;
+}
+
+.sandbox-search-opt.on {
+  background: #d7e3f6;
+  border-color: #7a9cc6;
+}

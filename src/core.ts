@@ -8,6 +8,12 @@ import { GFM } from "@lezer/markdown";
 import { livePreview, tablePreview } from "./live-preview";
 import { listKeymap } from "./list-indent";
 import { createAutosave, type SaveStatus } from "./autosave";
+import {
+  createSearch,
+  type SearchController,
+  type SearchOptions,
+  type SearchState,
+} from "./search";
 
 const markdownHighlight = HighlightStyle.define([
   { tag: tags.heading, fontWeight: "bold", textDecoration: "none" },
@@ -39,6 +45,12 @@ export interface MarkdownEditorHandle {
   focus(): void;
   /** Move the cursor to *pos* (0-based). */
   setCursor(pos: number): void;
+  /**
+   * Search over the rendered view (markdown syntax excluded). Commands live
+   * here because "go to the next match" is an action, not state; the state
+   * readout arrives via `onSearchState` or `search.subscribe`.
+   */
+  search: SearchController;
 }
 
 export interface MarkdownEditorOptions {
@@ -52,6 +64,12 @@ export interface MarkdownEditorOptions {
   retryMs?: number;
   /** Called whenever the save status changes. The host renders the status itself. */
   onSaveStatus?: (status: SaveStatus) => void;
+  /**
+   * Called whenever search state changes — including changes the host did not
+   * ask for, such as an edit altering the match count. The host renders the
+   * counter itself.
+   */
+  onSearchState?: (state: SearchState) => void;
 }
 
 export interface MarkdownEditorInstance extends MarkdownEditorHandle {
@@ -59,7 +77,7 @@ export interface MarkdownEditorInstance extends MarkdownEditorHandle {
   destroy(): void;
 }
 
-export type { SaveStatus };
+export type { SaveStatus, SearchController, SearchOptions, SearchState };
 
 /** Colour scheme for the editor. "system" follows the OS via prefers-color-scheme. */
 export type Theme = "light" | "dark" | "system";
@@ -74,6 +92,7 @@ export function createMarkdownEditor(
   opts: MarkdownEditorOptions,
 ): MarkdownEditorInstance {
   const historyConf = new Compartment();
+  const search = createSearch();
 
   const autosave = createAutosave((content) => opts.onSave(content), {
     debounceMs: opts.debounceMs ?? 2000,
@@ -95,6 +114,7 @@ export function createMarkdownEditor(
         syntaxHighlighting(markdownHighlight),
         livePreview,
         tablePreview,
+        search.extension,
         EditorView.lineWrapping,
         EditorView.updateListener.of((u) => {
           if (
@@ -109,8 +129,12 @@ export function createMarkdownEditor(
   });
   autosave.reset(opts.initialContent); // initial content is the baseline
 
+  const searchController = search.connect(view);
+  const unsubscribeSearch = searchController.subscribe((s) => opts.onSearchState?.(s));
+
   return {
     getContent: () => view.state.doc.toString(),
+    search: searchController,
     setContent: (content) => {
       view.dispatch({
         changes: { from: 0, to: view.state.doc.length, insert: content },
@@ -129,6 +153,7 @@ export function createMarkdownEditor(
     },
     destroy: () => {
       unsubscribe();
+      unsubscribeSearch();
       void autosave.flushSave().catch(() => {}); // best-effort persist on unmount
       autosave.dispose();
       view.destroy();

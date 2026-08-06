@@ -36,6 +36,10 @@
   --mle-th-bg: #f0efe9;
   --mle-selection: #b9d6ff;
   --mle-mark: #9a9a9a;
+  /* Search highlights. The current match is the stronger of the two so it can
+     be picked out at a glance while stepping through. */
+  --mle-search-match: #fff3a3;
+  --mle-search-match-current: #ffd83d;
   /* Width of one list nesting level, and of the bullet's own column. Both the
      prefix widget and the line's hanging indent are derived from it, so they
      stay in lockstep — see .cm-md-list-item and BulletWidget. Em-relative so it
@@ -53,6 +57,10 @@
   --mle-th-bg: #2b2b2b;
   --mle-selection: #2f5278;
   --mle-mark: #7c7c7c;
+  /* Muted amber: the light yellow is unreadable against a dark background,
+     and dark text is drawn over these. */
+  --mle-search-match: #6b5a1f;
+  --mle-search-match-current: #b08900;
 }
 
 /* Dark — following the OS when data-theme="system" */
@@ -66,6 +74,10 @@
     --mle-th-bg: #2b2b2b;
     --mle-selection: #2f5278;
     --mle-mark: #7c7c7c;
+  /* Muted amber: the light yellow is unreadable against a dark background,
+     and dark text is drawn over these. */
+  --mle-search-match: #6b5a1f;
+  --mle-search-match-current: #b08900;
   }
 }
 
@@ -196,6 +208,17 @@
    sits in the item's text column. */
 .cm-editor .cm-line.cm-md-list-continuation {
   padding-left: calc(var(--mle-hang) + 6px);
+}
+
+/* Search highlights (applied by search.ts). Background only — no padding,
+   border, or font change, so highlighting never reflows the text under it. */
+.cm-md-search-match {
+  background: var(--mle-search-match);
+  border-radius: 2px;
+}
+
+.cm-md-search-match-current {
+  background: var(--mle-search-match-current);
 }
 
 /* Inline decoration classes (applied by live-preview.ts) */

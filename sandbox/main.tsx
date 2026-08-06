@@ -1,10 +1,12 @@
 /** @jsxImportSource react */
-import { StrictMode, useRef, useState } from "react";
+import { StrictMode, useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
   MarkdownEditor,
   type MarkdownEditorHandle,
   type SaveStatus,
+  type SearchOptions,
+  type SearchState,
   type Theme,
 } from "../src/react";
 import "../src/styles.css";
@@ -39,6 +41,16 @@ saved\` in the toolbar, or \`couldn't save — retrying\` on failure.
 
 Toggle **Simulate save failures** to test the retry flow.
 
+## Search
+
+Press ⌘F (or the toolbar button). Search runs over the **rendered** view, so
+searching \`bold\` finds the **bold** above even though the source says
+\`**bold**\` — and searching \`**\` finds nothing, because you cannot see it.
+Table cells are searchable too: try \`retryMs\`.
+
+↓ / ↑ (or Enter / Shift-Enter) step through matches and wrap around at both
+ends. The three toggles are case sensitivity, whole word, and regex.
+
 ## Imperative handle
 
 A \`ref\` (forwardRef) gives the handle — try the toolbar buttons:
@@ -61,6 +73,102 @@ function timestamp() {
   return new Date().toLocaleTimeString();
 }
 
+/**
+ * The search box. The library ships no UI, so this is both the demo and the
+ * worked example: state arrives via onSearchState, commands go out through the
+ * handle, and the keys are bound *here* — while you are searching, focus is in
+ * this input, outside CodeMirror, where a library keymap could never fire.
+ */
+function SearchBox({
+  state,
+  editorRef,
+  onClose,
+}: {
+  state: SearchState;
+  editorRef: React.RefObject<MarkdownEditorHandle | null>;
+  onClose: () => void;
+}) {
+  const [query, setQuery] = useState("");
+  const [options, setOptions] = useState<Required<SearchOptions>>({
+    caseSensitive: false,
+    wholeWord: false,
+    regexp: false,
+  });
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => inputRef.current?.focus(), []);
+
+  const run = (nextQuery: string, nextOptions: Required<SearchOptions>) => {
+    setQuery(nextQuery);
+    setOptions(nextOptions);
+    editorRef.current?.search.setQuery(nextQuery, nextOptions);
+  };
+
+  const toggle = (key: keyof SearchOptions) => () =>
+    run(query, { ...options, [key]: !options[key] });
+
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "ArrowDown" || (e.key === "Enter" && !e.shiftKey)) {
+      e.preventDefault();
+      editorRef.current?.search.next();
+    } else if (e.key === "ArrowUp" || (e.key === "Enter" && e.shiftKey)) {
+      e.preventDefault();
+      editorRef.current?.search.previous();
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      onClose();
+    }
+  };
+
+  const counter = !state.valid
+    ? "bad pattern"
+    : state.query === ""
+      ? ""
+      : state.matchCount === 0
+        ? "no matches"
+        : `${state.currentIndex} / ${state.matchCount}`;
+
+  return (
+    <div className="sandbox-search">
+      <input
+        ref={inputRef}
+        className="sandbox-search-input"
+        placeholder="Search…"
+        value={query}
+        aria-invalid={!state.valid}
+        onChange={(e) => run(e.target.value, options)}
+        onKeyDown={onKeyDown}
+      />
+      <span className="sandbox-search-count">{counter}</span>
+      <button onClick={() => editorRef.current?.search.previous()} title="Previous (↑)">
+        ↑
+      </button>
+      <button onClick={() => editorRef.current?.search.next()} title="Next (↓)">
+        ↓
+      </button>
+      {(
+        [
+          ["caseSensitive", "Aa", "Case sensitive"],
+          ["wholeWord", "ab", "Whole word"],
+          ["regexp", ".*", "Regex"],
+        ] as const
+      ).map(([key, label, title]) => (
+        <button
+          key={key}
+          title={title}
+          className={options[key] ? "sandbox-search-opt on" : "sandbox-search-opt"}
+          onClick={toggle(key)}
+        >
+          {label}
+        </button>
+      ))}
+      <button onClick={onClose} title="Close (Esc)">
+        ✕
+      </button>
+    </div>
+  );
+}
+
 const STATUS_TEXT: Record<SaveStatus, string> = {
   idle: "",
   saving: "Saving…",
@@ -73,7 +181,35 @@ function Sandbox() {
   const [log, setLog] = useState<string[]>([]);
   const [status, setStatus] = useState<SaveStatus>("idle");
   const [theme, setTheme] = useState<Theme>("light");
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [search, setSearch] = useState<SearchState>({
+    query: "",
+    options: { caseSensitive: false, wholeWord: false, regexp: false },
+    matchCount: 0,
+    currentIndex: 0,
+    valid: true,
+  });
   const editorRef = useRef<MarkdownEditorHandle>(null);
+
+  // Cmd/Ctrl+F. Worth intercepting rather than leaving to the browser:
+  // CodeMirror only renders the visible viewport, so native find genuinely
+  // cannot see the rest of the document.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "f") {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  const closeSearch = () => {
+    setSearchOpen(false);
+    editorRef.current?.search.clear();
+    editorRef.current?.focus();
+  };
 
   const pushLog = (msg: string) =>
     setLog((prev) => [`[${timestamp()}] ${msg}`, ...prev].slice(0, 6));
@@ -134,17 +270,22 @@ function Sandbox() {
           <button onClick={loadSample}>Load sample</button>
           <button onClick={logContent}>Log content</button>
           <button onClick={saveNow}>Save now</button>
+          <button onClick={() => setSearchOpen(true)}>Search (⌘F)</button>
         </div>
         <span className="sandbox-status" role="status" aria-live="polite">
           {STATUS_TEXT[status]}
         </span>
       </header>
+      {searchOpen && (
+        <SearchBox state={search} editorRef={editorRef} onClose={closeSearch} />
+      )}
       <div className="sandbox-editor">
         <MarkdownEditor
           ref={editorRef}
           initialContent={INITIAL_DOC}
           onSave={onSave}
           onSaveStatus={setStatus}
+          onSearchState={setSearch}
           theme={theme}
         />
       </div>

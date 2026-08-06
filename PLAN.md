@@ -47,6 +47,7 @@ See [CONTEXT.md](./CONTEXT.md) for the glossary (Content, Live Preview, Autosave
 | `debounceMs` | `number` | `2000` |
 | `retryMs` | `number` | `5000` |
 | `onSaveStatus` | `(status: SaveStatus) => void` | — |
+| `onSearchState` | `(state: SearchState) => void` | — |
 | `theme` | `"light" \| "dark" \| "system"` | `"light"` |
 | `bg` | `{ light?: string; dark?: string }` | — |
 
@@ -62,6 +63,7 @@ See [CONTEXT.md](./CONTEXT.md) for the glossary (Content, Live Preview, Autosave
 | `setContent(content): void` | Replace the Content **programmatically** — does **not** fire Autosave, and **resets undo history** (Cmd-Z must not bridge across documents). |
 | `flushSave(): Promise<void>` | Force a save now (skip the debounce); resolve when quiesced, reject on failure. |
 | `focus(): void` | Move focus into the editor so the caret is visible and typing works immediately. |
+| `search: SearchController` | Search over the rendered view — `setQuery`, `next`, `previous`, `clear`, `getState`, `subscribe`. Commands are imperative because "go to the next match" is an action, not state; the readout arrives through `onSearchState`. See `PLAN-SEARCH.md`. |
 
 **Switching documents (Consumer-owned handshake, ADR-0002):**
 
